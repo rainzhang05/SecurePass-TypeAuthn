@@ -153,7 +153,12 @@ def enroll_start(payload: EnrollmentStartRequest):
 @app.post("/enroll/submit")
 def enroll_submit(payload: EnrollmentSubmitRequest):
     feature_vector = extract_features(payload.events)
-    training = add_sample_and_maybe_train(payload.user_id, feature_vector.features.tolist(), list(feature_vector.names))
+    training = add_sample_and_maybe_train(
+        payload.user_id,
+        feature_vector.features.tolist(),
+        list(feature_vector.names),
+        min_samples=len(PROMPTS),
+    )
     response: Dict[str, object] = {
         "features": feature_vector.as_dict(),
         "stored_samples": training.samples if isinstance(training, TrainingResult) else None,
