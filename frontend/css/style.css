@@ -1,7 +1,21 @@
 :root {
   color-scheme: light;
-  --primary: #38bdf8;
-  --primary-soft: rgba(56, 189, 248, 0.15);
+  --primary-50: #f0f9ff;
+  --primary-100: #e0f2fe;
+  --primary-200: #bae6fd;
+  --primary-300: #7dd3fc;
+  --primary-400: #38bdf8;
+  --primary-500: #0ea5e9;
+  --primary: var(--primary-400);
+  --primary-soft: rgba(56, 189, 248, 0.16);
+  --primary-border: rgba(56, 189, 248, 0.32);
+  --primary-border-strong: rgba(56, 189, 248, 0.6);
+  --primary-shadow-strong: rgba(56, 189, 248, 0.3);
+  --primary-shadow-soft: rgba(56, 189, 248, 0.18);
+  --primary-tint-strong: rgba(125, 211, 252, 0.3);
+  --primary-tint-soft: rgba(125, 211, 252, 0.2);
+  --primary-tint-lighter: rgba(125, 211, 252, 0.12);
+  --primary-focus-ring: rgba(125, 211, 252, 0.35);
   --surface: #ffffff;
   --surface-muted: #f1f5f9;
   --text-strong: #0f172a;
@@ -87,7 +101,7 @@ h1 {
 
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 18px 32px var(--primary-shadow-soft);
 }
 
 .form-group {
@@ -113,27 +127,28 @@ textarea {
 
 textarea,
 input {
-  border-color: rgba(56, 189, 248, 0.35);
+  border-color: var(--primary-border);
 }
 
 textarea:focus, input:focus {
-  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline: 3px solid var(--primary-border);
   background: var(--surface);
 }
 
 textarea {
-  background: #e0f2fe;
+  background: var(--primary-100);
   color: var(--text-strong);
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 textarea:focus {
-  background: #f0f9ff;
-  border-color: rgba(56, 189, 248, 0.6);
+  background: var(--primary-50);
+  border-color: var(--primary-border-strong);
 }
 
 textarea::placeholder {
-  color: rgba(14, 116, 144, 0.75);
+  color: var(--primary-500);
+  color: color-mix(in srgb, var(--primary-500) 55%, var(--text-strong));
 }
 
 .btn {
@@ -149,7 +164,7 @@ textarea::placeholder {
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 12px 24px var(--primary-shadow-strong);
 }
 
 .btn:disabled {
@@ -159,34 +174,34 @@ textarea::placeholder {
 }
 
 .btn-secondary {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--primary-soft);
   color: var(--primary);
 }
 
 #startEnrollment,
 #startAuth {
-  background: #7dd3fc;
-  color: #0f172a;
+  background: var(--primary-300);
+  color: var(--text-strong);
 }
 
 #startEnrollment:hover,
 #startAuth:hover {
-  box-shadow: 0 12px 24px rgba(125, 211, 252, 0.45);
+  box-shadow: 0 12px 24px var(--primary-shadow-strong);
 }
 
 #backHome,
 #authBackHome {
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: var(--primary-50);
+  color: var(--primary-500);
 }
 
 #backHome:hover,
 #authBackHome:hover {
-  box-shadow: 0 12px 24px rgba(219, 234, 254, 0.7);
+  box-shadow: 0 12px 24px var(--primary-shadow-soft);
 }
 
 .btn-secondary:hover {
-  box-shadow: 0 12px 24px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 12px 24px var(--primary-shadow-soft);
 }
 
 .btn-danger {
@@ -215,7 +230,7 @@ textarea::placeholder {
 }
 
 #promptText, #challengeText {
-  background: rgba(125, 211, 252, 0.25);
+  background: var(--primary-tint-strong);
   padding: 1rem;
   border-radius: 1rem;
   color: var(--text-strong);
@@ -239,7 +254,7 @@ textarea::placeholder {
 
 .totp {
   margin-top: 2.5rem;
-  background: rgba(37, 99, 235, 0.08);
+  background: var(--primary-tint-lighter);
   padding: 1.25rem 1.5rem;
   border-radius: 1rem;
   text-align: center;
@@ -282,7 +297,7 @@ select:focus {
   margin-top: 1rem;
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  background: rgba(125, 211, 252, 0.18);
+  background: var(--primary-tint-soft);
   border-radius: 1rem;
   font-family: "Fira Code", "JetBrains Mono", monospace;
   font-size: 1rem;
@@ -309,7 +324,7 @@ select:focus {
 }
 
 .prompt-characters span.active {
-  background: #e0f2fe;
+  background: var(--primary-100);
   color: var(--primary);
 }
 
@@ -388,7 +403,7 @@ select:focus {
   border-radius: 1rem;
   padding: 0.85rem 1rem;
   font-size: 1rem;
-  background: #e0f2fe;
+  background: var(--primary-100);
   color: var(--text-strong);
   display: flex;
   align-items: center;
@@ -398,13 +413,13 @@ select:focus {
 }
 
 .dropdown-toggle:hover {
-  box-shadow: 0 12px 24px rgba(125, 211, 252, 0.3);
+  box-shadow: 0 12px 24px var(--primary-shadow-strong);
 }
 
 .dropdown-toggle:focus {
   outline: none;
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.35);
+  border-color: var(--primary-border-strong);
+  box-shadow: 0 0 0 4px var(--primary-focus-ring);
 }
 
 .dropdown-label {
@@ -457,11 +472,11 @@ select:focus {
 }
 
 .dropdown-option:hover {
-  background: rgba(125, 211, 252, 0.25);
+  background: var(--primary-tint-strong);
 }
 
 .dropdown-option.is-active {
-  background: rgba(56, 189, 248, 0.18);
+  background: var(--primary-tint-soft);
   color: var(--primary);
 }
 
