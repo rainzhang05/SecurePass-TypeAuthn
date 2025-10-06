@@ -1,6 +1,9 @@
 (function () {
   const startBtn = document.getElementById('startAuth');
-  const userSelect = document.getElementById('authUserId');
+  const dropdown = document.getElementById('authUserDropdown');
+  const dropdownToggle = document.getElementById('authDropdownToggle');
+  const dropdownMenu = document.getElementById('authDropdownMenu');
+  const dropdownLabel = document.getElementById('authDropdownLabel');
   const container = document.getElementById('challengeContainer');
   const challengeText = document.getElementById('challengeText');
   const challengeChars = document.getElementById('challengeChars');
@@ -10,12 +13,20 @@
   const totpCode = document.getElementById('totpCode');
   const backHome = document.getElementById('authBackHome');
 
+  if (!startBtn || !dropdown || !dropdownToggle || !dropdownMenu || !dropdownLabel || !textarea || !status) {
+    return;
+  }
+
   let events = [];
   let challengePhrase = '';
   let captureActive = false;
   let sessionActive = false;
+  let dropdownDisabled = true;
+  let availableUsers = [];
+  let selectedUser = '';
 
   textarea.disabled = true;
+  setDropdownDisabled(true);
 
   function sanitizeKey(event) {
     if (event.key === 'Unidentified') {
@@ -29,7 +40,7 @@
     text.split('').forEach((char, index) => {
       const span = document.createElement('span');
       span.dataset.index = String(index);
-      span.textContent = char === ' ' ? '␣' : char;
+      span.textContent = char === ' ' ? ' ' : char;
       challengeChars.appendChild(span);
     });
     if (!text.length) {
@@ -56,7 +67,7 @@
   }
 
   function handleTypingInput() {
-    if (!sessionActive) {
+    if (textarea.disabled) {
       return;
     }
     if (textarea.value.length > challengePhrase.length) {
@@ -65,44 +76,113 @@
     if (!captureActive && textarea.value.length > 0) {
       captureActive = true;
       status.textContent = 'Authentication capture started...';
+      sessionActive = true;
     }
     updateChallengeHighlights(textarea.value);
+  }
+
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    dropdownToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function openDropdown() {
+    if (dropdownDisabled) {
+      return;
+    }
+    dropdown.classList.add('open');
+    dropdownToggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function setDropdownDisabled(disabled) {
+    dropdownDisabled = disabled;
+    if (disabled) {
+      dropdown.classList.add('disabled');
+      closeDropdown();
+    } else {
+      dropdown.classList.remove('disabled');
+    }
+    dropdownToggle.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+  }
+
+  function updateDropdownLabel(text) {
+    dropdownLabel.textContent = text;
+  }
+
+  function selectUser(userId, { silent } = { silent: false }) {
+    selectedUser = userId;
+    const options = dropdownMenu.querySelectorAll('.dropdown-option');
+    options.forEach((opt) => {
+      if (!(opt instanceof HTMLElement)) return;
+      const isActive = opt.dataset.value === userId;
+      opt.classList.toggle('is-active', isActive);
+      opt.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    if (userId) {
+      updateDropdownLabel(userId);
+      startBtn.disabled = false;
+      if (!silent) {
+        status.textContent = '';
+      }
+    } else {
+      updateDropdownLabel('Select a saved ID');
+      startBtn.disabled = true;
+    }
+  }
+
+  function toggleDropdown() {
+    if (dropdownDisabled) {
+      return;
+    }
+    if (dropdown.classList.contains('open')) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
   }
 
   async function loadUsers() {
     try {
       const payload = await window.SecurePassAPI.get('/users');
-      const users = payload.users || [];
-      userSelect.innerHTML = '';
-      if (!users.length) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'No saved profiles';
-        userSelect.appendChild(option);
-        userSelect.disabled = true;
+      availableUsers = payload.users || [];
+      dropdownMenu.innerHTML = '';
+      if (!availableUsers.length) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'dropdown-empty';
+        emptyState.textContent = 'No saved profiles';
+        dropdownMenu.appendChild(emptyState);
+        setDropdownDisabled(true);
+        selectUser('', { silent: true });
         startBtn.disabled = true;
         status.textContent = 'Enroll a profile to begin authentication.';
         return;
       }
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = 'Select a saved ID';
-      placeholder.disabled = true;
-      placeholder.selected = true;
-      userSelect.appendChild(placeholder);
-      users.forEach((userId) => {
-        const option = document.createElement('option');
-        option.value = userId;
+      availableUsers.forEach((userId) => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'dropdown-option';
+        option.dataset.value = userId;
+        option.setAttribute('role', 'option');
         option.textContent = userId;
-        userSelect.appendChild(option);
+        dropdownMenu.appendChild(option);
       });
-      userSelect.disabled = false;
-      startBtn.disabled = false;
+      setDropdownDisabled(false);
+      if (selectedUser && availableUsers.includes(selectedUser)) {
+        selectUser(selectedUser, { silent: true });
+      } else {
+        selectUser('', { silent: true });
+      }
       status.textContent = '';
     } catch (err) {
-      status.textContent = `Unable to load saved IDs: ${err.message}`;
-      userSelect.disabled = true;
+      dropdownMenu.innerHTML = '';
+      const errorState = document.createElement('div');
+      errorState.className = 'dropdown-empty';
+      errorState.textContent = 'Unable to load IDs';
+      dropdownMenu.appendChild(errorState);
+      setDropdownDisabled(true);
+      selectUser('', { silent: true });
       startBtn.disabled = true;
+      status.textContent = `Unable to load saved IDs: ${err.message}`;
     }
   }
 
@@ -120,7 +200,7 @@
     try {
       status.textContent = 'Authenticating...';
       const response = await window.SecurePassAPI.post('/auth/submit', {
-        user_id: userSelect.value,
+        user_id: selectedUser,
         events
       });
       if (response.result.accepted) {
@@ -141,7 +221,9 @@
       textarea.focus();
       captureActive = false;
       sessionActive = false;
-      userSelect.disabled = false;
+      if (availableUsers.length) {
+        setDropdownDisabled(false);
+      }
       startBtn.disabled = false;
     }
   }
@@ -152,7 +234,7 @@
     }
     try {
       const payload = await window.SecurePassAPI.post('/totp/reveal', {
-        user_id: userSelect.value,
+        user_id: selectedUser,
         auth_token: token
       });
       totpSection.classList.remove('hidden');
@@ -186,16 +268,44 @@
         window.location.href = '/';
       });
     }
+
+    dropdownToggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleDropdown();
+    });
+
+    dropdownMenu.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target.closest('.dropdown-option') : null;
+      const option = target;
+      if (!option) {
+        return;
+      }
+      event.stopPropagation();
+      selectUser(option.dataset.value || '');
+      closeDropdown();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!dropdown.contains(event.target)) {
+        closeDropdown();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeDropdown();
+      }
+    });
   }
 
   startBtn.addEventListener('click', async () => {
-    const userId = userSelect.value;
+    const userId = selectedUser;
     if (!userId) {
       status.textContent = 'Select a saved ID first.';
       return;
     }
     startBtn.disabled = true;
-    userSelect.disabled = true;
+    setDropdownDisabled(true);
     try {
       const payload = await window.SecurePassAPI.post('/auth/start', { user_id: userId });
       challengePhrase = payload.challenge;
@@ -213,7 +323,9 @@
       sessionActive = true;
     } catch (err) {
       status.textContent = err.message;
-      userSelect.disabled = false;
+      if (availableUsers.length) {
+        setDropdownDisabled(false);
+      }
       startBtn.disabled = false;
     }
   });

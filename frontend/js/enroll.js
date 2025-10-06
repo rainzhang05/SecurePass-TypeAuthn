@@ -42,7 +42,7 @@
     text.split('').forEach((char, index) => {
       const span = document.createElement('span');
       span.dataset.index = String(index);
-      span.textContent = char === ' ' ? '␣' : char;
+      span.textContent = char === ' ' ? ' ' : char;
       promptChars.appendChild(span);
     });
     if (!text.length) {
