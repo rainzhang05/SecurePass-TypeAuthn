@@ -6,7 +6,7 @@
   <title>Enroll - SecurePass-TypeAuthn</title>
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body>
+<body class="page-transition">
   <div class="container">
     <h1>Enrollment</h1>
     <p class="lead">
@@ -22,16 +22,16 @@
       <input id="userId" type="text" placeholder="Enter a unique username" />
     </div>
     <button id="startEnrollment" class="btn">Start Enrollment</button>
-    <div id="progress" class="progress hidden">
+    <div id="progress" class="progress hidden animated-section">
       <div class="progress-bar" id="progressBar"></div>
     </div>
-    <div id="promptContainer" class="prompt hidden">
+    <div id="promptContainer" class="prompt hidden animated-section">
       <p id="promptText"></p>
       <div id="promptChars" class="prompt-characters"></div>
       <textarea id="typingArea" rows="4" placeholder="Start typing the prompt..."></textarea>
       <p id="status" class="status-message"></p>
     </div>
-    <div id="totpSetup" class="totp hidden">
+    <div id="totpSetup" class="totp hidden animated-section">
       <h2>Set up Two-Factor Authentication</h2>
       <p>
         Pair the generated secret with your authenticator app to add a backup factor. This QR
@@ -56,6 +56,7 @@
       <button id="backHome" type="button" class="btn btn-secondary">Back to Home</button>
     </div>
   </div>
+  <script src="/static/js/transitions.js"></script>
   <script src="/static/js/api.js"></script>
   <script src="/static/js/enroll.js"></script>
 </body>

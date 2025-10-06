@@ -12,6 +12,7 @@
   const totpSection = document.getElementById('totp');
   const totpCode = document.getElementById('totpCode');
   const backHome = document.getElementById('authBackHome');
+  const transitions = window.SecurePassTransitions;
 
   if (!startBtn || !dropdown || !dropdownToggle || !dropdownMenu || !dropdownLabel || !textarea || !status) {
     return;
@@ -27,6 +28,28 @@
 
   textarea.disabled = true;
   setDropdownDisabled(true);
+
+  function showSection(element) {
+    if (!element) {
+      return;
+    }
+    if (transitions && typeof transitions.revealSection === 'function') {
+      transitions.revealSection(element);
+    } else {
+      element.classList.remove('hidden');
+    }
+  }
+
+  function hideSection(element) {
+    if (!element) {
+      return;
+    }
+    if (transitions && typeof transitions.hideSection === 'function') {
+      transitions.hideSection(element);
+    } else {
+      element.classList.add('hidden');
+    }
+  }
 
   function sanitizeKey(event) {
     if (event.key === 'Unidentified') {
@@ -208,11 +231,11 @@
         await revealTotp(response.auth_token);
       } else {
         status.textContent = `Denied ❌ (score ${response.result.score.toFixed(3)})`;
-        totpSection.classList.add('hidden');
+        hideSection(totpSection);
       }
     } catch (err) {
       status.textContent = err.message;
-      totpSection.classList.add('hidden');
+      hideSection(totpSection);
     } finally {
       events = [];
       textarea.value = '';
@@ -237,10 +260,11 @@
         user_id: selectedUser,
         auth_token: token
       });
-      totpSection.classList.remove('hidden');
+      showSection(totpSection);
       totpCode.textContent = payload.code;
     } catch (err) {
       status.textContent = `2FA retrieval failed: ${err.message}`;
+      hideSection(totpSection);
     }
   }
 
@@ -264,8 +288,13 @@
     });
 
     if (backHome) {
-      backHome.addEventListener('click', () => {
-        window.location.href = '/';
+      backHome.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (transitions && typeof transitions.navigate === 'function') {
+          transitions.navigate('/');
+        } else {
+          window.location.href = '/';
+        }
       });
     }
 
@@ -315,8 +344,8 @@
       textarea.value = '';
       textarea.disabled = false;
       textarea.focus();
-      container.classList.remove('hidden');
-      totpSection.classList.add('hidden');
+      showSection(container);
+      hideSection(totpSection);
       status.textContent = 'Type the phrase and press Enter.';
       events = [];
       captureActive = false;

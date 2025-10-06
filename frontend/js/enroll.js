@@ -14,11 +14,34 @@
   const savedList = document.getElementById('savedIdsList');
   const savedEmpty = document.getElementById('savedIdsEmpty');
   const backHome = document.getElementById('backHome');
+  const transitions = window.SecurePassTransitions;
 
   let prompts = [];
   let currentIndex = 0;
   let events = [];
   let trainingActive = false;
+
+  function showSection(element) {
+    if (!element) {
+      return;
+    }
+    if (transitions && typeof transitions.revealSection === 'function') {
+      transitions.revealSection(element);
+    } else {
+      element.classList.remove('hidden');
+    }
+  }
+
+  function hideSection(element) {
+    if (!element) {
+      return;
+    }
+    if (transitions && typeof transitions.hideSection === 'function') {
+      transitions.hideSection(element);
+    } else {
+      element.classList.add('hidden');
+    }
+  }
 
   function resetState() {
     currentIndex = 0;
@@ -28,6 +51,9 @@
     status.textContent = '';
     promptChars.innerHTML = '';
     typingArea.value = '';
+    hideSection(promptContainer);
+    hideSection(progress);
+    hideSection(totpSection);
   }
 
   function sanitizeKey(event) {
@@ -187,11 +213,12 @@
       const payload = await window.SecurePassAPI.post('/totp/setup', {
         user_id: userInput.value.trim()
       });
-      totpSection.classList.remove('hidden');
+      showSection(totpSection);
       totpQr.src = `data:image/png;base64,${payload.qr}`;
       totpSecret.textContent = `Secret: ${payload.secret}`;
     } catch (err) {
       status.textContent = `TOTP setup failed: ${err.message}`;
+      hideSection(totpSection);
     }
   }
 
@@ -240,8 +267,13 @@
     }
 
     if (backHome) {
-      backHome.addEventListener('click', () => {
-        window.location.href = '/';
+      backHome.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (transitions && typeof transitions.navigate === 'function') {
+          transitions.navigate('/');
+        } else {
+          window.location.href = '/';
+        }
       });
     }
   }
@@ -262,9 +294,9 @@
         status.textContent = 'No prompts available.';
         return;
       }
-      progress.classList.remove('hidden');
-      promptContainer.classList.remove('hidden');
       preparePrompt();
+      showSection(progress);
+      showSection(promptContainer);
       status.textContent = 'Type the prompt and press Enter to submit.';
     } catch (err) {
       status.textContent = err.message;

@@ -22,6 +22,22 @@ body {
   justify-content: center;
 }
 
+body.page-transition {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+body.page-transition.page-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.page-transition.page-exit {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
 body.home-page {
   overflow: hidden;
 }
@@ -174,6 +190,18 @@ textarea:focus {
 
 .prompt {
   margin-top: 1.5rem;
+}
+
+.animated-section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  will-change: opacity, transform;
+}
+
+.animated-section.is-active {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 #promptText, #challengeText {
@@ -443,6 +471,18 @@ select:focus {
 
   .prompt-characters {
     font-size: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-transition,
+  .animated-section {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  body.page-transition {
+    opacity: 1 !important;
   }
 }
 

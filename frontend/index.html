@@ -6,7 +6,7 @@
   <title>SecurePass-TypeAuthn</title>
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body class="home-page">
+<body class="home-page page-transition">
   <div class="container">
     <h1>SecurePass-TypeAuthn</h1>
     <p class="lead">
@@ -21,14 +21,14 @@
     </p>
 
     <div class="card-grid">
-      <a href="/static/enroll.html" class="card">
+      <a href="/static/enroll.html" class="card" data-transition>
         <h2>Enroll</h2>
         <p>
           Record three guided typing samples so the model can learn your dwell, flight, and
           pause patterns. We'll only keep anonymized timing data on your device.
         </p>
       </a>
-      <a href="/static/auth.html" class="card">
+      <a href="/static/auth.html" class="card" data-transition>
         <h2>Authenticate</h2>
         <p>
           Verify your identity with a short phrase challenge, review the confidence score,
@@ -37,5 +37,6 @@
       </a>
     </div>
   </div>
+  <script src="/static/js/transitions.js"></script>
 </body>
 </html>

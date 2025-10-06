@@ -6,7 +6,7 @@
   <title>Authenticate - SecurePass-TypeAuthn</title>
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body>
+<body class="page-transition">
   <div class="container">
     <h1>Authenticate</h1>
     <p class="lead">
@@ -28,13 +28,13 @@
       </div>
     </div>
     <button id="startAuth" class="btn">Start Authentication</button>
-    <div id="challengeContainer" class="prompt hidden">
+    <div id="challengeContainer" class="prompt hidden animated-section">
       <p id="challengeText"></p>
       <div id="challengeChars" class="prompt-characters"></div>
       <textarea id="authArea" rows="3" placeholder="Type the challenge phrase..."></textarea>
       <p id="authStatus" class="status-message"></p>
     </div>
-    <div id="totp" class="totp hidden">
+    <div id="totp" class="totp hidden animated-section">
       <h2>TOTP Code</h2>
       <p>
         Use this rotating six-digit code to finish logging in on connected services. It is
@@ -46,6 +46,7 @@
       <button id="authBackHome" type="button" class="btn btn-secondary">Back to Home</button>
     </div>
   </div>
+  <script src="/static/js/transitions.js"></script>
   <script src="/static/js/api.js"></script>
   <script src="/static/js/auth.js"></script>
 </body>
