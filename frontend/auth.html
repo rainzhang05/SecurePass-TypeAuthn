@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authenticate - SecurePass-TypeAuthn</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Authenticate</h1>
+    <p class="lead">Type the challenge phrase quickly to verify your identity.</p>
+    <div class="form-group">
+      <label for="authUserId">User ID</label>
+      <input id="authUserId" type="text" placeholder="Existing username" />
+    </div>
+    <button id="startAuth" class="btn">Start Authentication</button>
+    <div id="challengeContainer" class="prompt hidden">
+      <p id="challengeText"></p>
+      <textarea id="authArea" rows="3" placeholder="Type the challenge phrase..."></textarea>
+      <p id="authStatus"></p>
+    </div>
+    <div id="totp" class="totp hidden">
+      <h2>TOTP Code</h2>
+      <p id="totpCode"></p>
+    </div>
+    <a href="/" class="link">Back to home</a>
+  </div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>

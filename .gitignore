@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+backend/__pycache__/
+backend/utils/__pycache__/
+backend/data/*
+!backend/data/demo/
+backend/data/demo/*
+!backend/data/demo/features.csv.enc
+backend/models/*
+!backend/models/demo/
+backend/models/demo/*
+!backend/models/demo/model.pkl.enc
+!backend/models/demo/threshold.json.enc
+backend/secrets/*
+backend/secret.key
+.env
+*.log
