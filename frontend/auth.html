@@ -14,18 +14,19 @@
       your enrolled model and display the results in real time.
     </p>
     <p class="section-description">
-      Start by entering the user ID you enrolled with. Once authenticated you can reveal the
-      current TOTP code to complete a two-factor sign-in flow.
+      Choose one of your enrolled IDs to launch the challenge. Once authenticated you can reveal
+      the current TOTP code to complete a two-factor sign-in flow.
     </p>
     <div class="form-group">
-      <label for="authUserId">User ID</label>
-      <input id="authUserId" type="text" placeholder="Existing username" />
+      <label for="authUserId">Saved IDs</label>
+      <select id="authUserId"></select>
     </div>
     <button id="startAuth" class="btn">Start Authentication</button>
     <div id="challengeContainer" class="prompt hidden">
       <p id="challengeText"></p>
+      <div id="challengeChars" class="prompt-characters"></div>
       <textarea id="authArea" rows="3" placeholder="Type the challenge phrase..."></textarea>
-      <p id="authStatus"></p>
+      <p id="authStatus" class="status-message"></p>
     </div>
     <div id="totp" class="totp hidden">
       <h2>TOTP Code</h2>
@@ -35,7 +36,9 @@
       </p>
       <p id="totpCode"></p>
     </div>
-    <a href="/" class="link">Back to home</a>
+    <div class="button-row">
+      <button id="authBackHome" type="button" class="btn btn-secondary">Back to Home</button>
+    </div>
   </div>
   <script src="/static/js/api.js"></script>
   <script src="/static/js/auth.js"></script>

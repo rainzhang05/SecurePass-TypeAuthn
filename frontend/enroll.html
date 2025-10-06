@@ -27,8 +27,9 @@
     </div>
     <div id="promptContainer" class="prompt hidden">
       <p id="promptText"></p>
+      <div id="promptChars" class="prompt-characters"></div>
       <textarea id="typingArea" rows="4" placeholder="Start typing the prompt..."></textarea>
-      <p id="status"></p>
+      <p id="status" class="status-message"></p>
     </div>
     <div id="totpSetup" class="totp hidden">
       <h2>Set up Two-Factor Authentication</h2>
@@ -39,7 +40,21 @@
       <img id="totpQr" alt="TOTP QR" />
       <p id="totpSecret"></p>
     </div>
-    <a href="/" class="link">Back to home</a>
+    <section class="saved-section">
+      <div class="saved-header">
+        <h2>Saved IDs</h2>
+        <p class="section-description">
+          Registered profiles appear here. Remove any you no longer need to clear the stored model
+          and timing data from this device.
+        </p>
+      </div>
+      <ul id="savedIdsList" class="saved-list"></ul>
+      <p id="savedIdsEmpty" class="empty-state hidden">No trained profiles yet.</p>
+    </section>
+
+    <div class="button-row">
+      <button id="backHome" type="button" class="btn btn-secondary">Back to Home</button>
+    </div>
   </div>
   <script src="/static/js/api.js"></script>
   <script src="/static/js/enroll.js"></script>

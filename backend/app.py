@@ -23,7 +23,13 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 from backend.utils.feature_extraction import extract_features
-from backend.utils.storage import get_user_dir, load_secret, store_secret
+from backend.utils.storage import (
+    delete_user_artifacts,
+    get_user_dir,
+    list_user_ids,
+    load_secret,
+    store_secret,
+)
 from backend.utils.train_model import TrainingResult, add_sample_and_maybe_train
 from backend.utils.verify_model import LivenessError, ModelNotTrainedError, verify_sample
 
@@ -97,6 +103,10 @@ class SessionStore:
     def invalidate(self, token: str) -> None:
         self._tokens.pop(token, None)
 
+    def revoke_user(self, user_id: str) -> None:
+        for token in [t for t, payload in self._tokens.items() if payload.get("user_id") == user_id]:
+            self._tokens.pop(token, None)
+
 
 session_store = SessionStore()
 
@@ -118,6 +128,20 @@ if FRONTEND_DIR.exists():
 @app.get("/")
 def serve_index() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
+
+
+@app.get("/users")
+def list_users() -> Dict[str, List[str]]:
+    return {"users": list_user_ids()}
+
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: str):
+    removed = delete_user_artifacts(user_id)
+    session_store.revoke_user(user_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"deleted": user_id}
 
 
 @app.post("/enroll/start")

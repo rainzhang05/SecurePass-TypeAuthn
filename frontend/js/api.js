@@ -1,4 +1,21 @@
 (function () {
+  async function handleResponse(response) {
+    if (!response.ok) {
+      let detail = 'Request failed';
+      try {
+        const payload = await response.json();
+        detail = payload.detail || detail;
+      } catch (err) {
+        // Ignore parsing issues
+      }
+      throw new Error(detail);
+    }
+    if (response.status === 204) {
+      return {};
+    }
+    return response.json();
+  }
+
   async function post(path, body) {
     const response = await fetch(path, {
       method: 'POST',
@@ -7,18 +24,28 @@
       },
       body: JSON.stringify(body)
     });
-    if (!response.ok) {
-      let detail = 'Request failed';
-      try {
-        const payload = await response.json();
-        detail = payload.detail || detail;
-      } catch (err) {
-        // Ignore
-      }
-      throw new Error(detail);
-    }
-    return response.json();
+    return handleResponse(response);
   }
 
-  window.SecurePassAPI = { post };
+  async function get(path) {
+    const response = await fetch(path, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    return handleResponse(response);
+  }
+
+  async function del(path) {
+    const response = await fetch(path, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    return handleResponse(response);
+  }
+
+  window.SecurePassAPI = { post, get, del };
 })();
