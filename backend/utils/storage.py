@@ -48,7 +48,16 @@ def read_json(path: Path) -> dict:
     if not path.exists():
         return {}
     data = read_encrypted(path)
-    return json.loads(data.decode("utf-8"))
+    decoded = data.decode("utf-8").strip()
+    if not decoded:
+        return {}
+    try:
+        return json.loads(decoded)
+    except json.JSONDecodeError:
+        # Older secrets may have been stored as raw strings; normalize them into JSON.
+        payload = {"value": decoded}
+        write_json(path, payload)
+        return payload
 
 
 def write_json(path: Path, payload: dict) -> None:
