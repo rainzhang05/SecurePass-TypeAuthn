@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enroll - SecurePass-TypeAuthn</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Enrollment</h1>
+    <p class="lead">Type the prompts naturally. We only record timing metadata.</p>
+    <div class="form-group">
+      <label for="userId">User ID</label>
+      <input id="userId" type="text" placeholder="Enter a unique username" />
+    </div>
+    <button id="startEnrollment" class="btn">Start Enrollment</button>
+    <div id="progress" class="progress hidden">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="promptContainer" class="prompt hidden">
+      <p id="promptText"></p>
+      <textarea id="typingArea" rows="4" placeholder="Start typing the prompt..."></textarea>
+      <p id="status"></p>
+    </div>
+    <div id="totpSetup" class="totp hidden">
+      <h2>Set up Two-Factor Authentication</h2>
+      <p>Scan the QR code in your authenticator app or use the secret below.</p>
+      <img id="totpQr" alt="TOTP QR" />
+      <p id="totpSecret"></p>
+    </div>
+    <a href="/" class="link">Back to home</a>
+  </div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/enroll.js"></script>
+</body>
+</html>
