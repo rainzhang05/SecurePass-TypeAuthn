@@ -1,17 +1,21 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --primary: #2563eb;
-  --bg: #f8fafc;
-  --text: #0f172a;
-  --card: #ffffffaa;
+  --primary-soft: rgba(37, 99, 235, 0.1);
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --text-strong: #0f172a;
+  --text-muted: #475569;
+  --border: #e2e8f0;
+  font-size: 16px;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
-  padding: 0;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: var(--text);
+  padding: 2.5rem 1rem;
+  background: var(--surface-muted);
+  color: var(--text-strong);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -19,23 +23,30 @@ body {
 }
 
 .container {
-  background: rgba(255, 255, 255, 0.92);
-  color: #0f172a;
-  padding: 2rem 3rem;
-  border-radius: 1.5rem;
-  max-width: 760px;
-  width: 90%;
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+  background: var(--surface);
+  padding: 2.5rem 3rem;
+  border-radius: 1.75rem;
+  max-width: 860px;
+  width: min(95%, 860px);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--border);
 }
 
 h1 {
   margin-top: 0;
-  font-size: 2.4rem;
+  font-size: clamp(2rem, 2.6vw + 1rem, 2.8rem);
+  letter-spacing: -0.02em;
 }
 
 .lead {
-  color: #334155;
+  color: var(--text-muted);
   margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.section-description {
+  color: var(--text-muted);
+  margin: -0.75rem 0 2rem;
 }
 
 .card-grid {
@@ -46,7 +57,7 @@ h1 {
 
 .card {
   display: block;
-  background: rgba(37, 99, 235, 0.1);
+  background: var(--primary-soft);
   padding: 1.5rem;
   border-radius: 1rem;
   text-decoration: none;
@@ -56,7 +67,7 @@ h1 {
 
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.18);
 }
 
 .form-group {
@@ -71,22 +82,24 @@ label {
 }
 
 input, textarea {
-  border: 1px solid #cbd5f5;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  padding: 0.85rem 1rem;
   font-size: 1rem;
+  background: var(--surface-muted);
   resize: none;
 }
 
 textarea:focus, input:focus {
-  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  background: var(--surface);
 }
 
 .btn {
   background: var(--primary);
   color: white;
   border: none;
-  padding: 0.85rem 1.6rem;
+  padding: 0.9rem 1.7rem;
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
@@ -94,8 +107,8 @@ textarea:focus, input:focus {
 }
 
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
 }
 
 .btn:disabled {
@@ -109,7 +122,7 @@ textarea:focus, input:focus {
 }
 
 #promptText, #challengeText {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.18);
   padding: 1rem;
   border-radius: 1rem;
 }
@@ -132,15 +145,16 @@ textarea:focus, input:focus {
 
 .link {
   display: inline-block;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
   color: var(--primary);
   text-decoration: none;
+  font-weight: 600;
 }
 
 .totp {
-  margin-top: 2rem;
-  background: rgba(15, 23, 42, 0.05);
-  padding: 1rem 1.5rem;
+  margin-top: 2.5rem;
+  background: rgba(37, 99, 235, 0.08);
+  padding: 1.25rem 1.5rem;
   border-radius: 1rem;
   text-align: center;
 }

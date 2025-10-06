@@ -9,7 +9,14 @@
 <body>
   <div class="container">
     <h1>Authenticate</h1>
-    <p class="lead">Type the challenge phrase quickly to verify your identity.</p>
+    <p class="lead">
+      Test your typing profile against a fresh challenge phrase. We compare the new rhythm to
+      your enrolled model and display the results in real time.
+    </p>
+    <p class="section-description">
+      Start by entering the user ID you enrolled with. Once authenticated you can reveal the
+      current TOTP code to complete a two-factor sign-in flow.
+    </p>
     <div class="form-group">
       <label for="authUserId">User ID</label>
       <input id="authUserId" type="text" placeholder="Existing username" />
@@ -22,6 +29,10 @@
     </div>
     <div id="totp" class="totp hidden">
       <h2>TOTP Code</h2>
+      <p>
+        Use this rotating six-digit code to finish logging in on connected services. It is
+        refreshed every 30 seconds and only appears during an active session.
+      </p>
       <p id="totpCode"></p>
     </div>
     <a href="/" class="link">Back to home</a>
