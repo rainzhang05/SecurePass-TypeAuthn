@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+backend/models/
+!backend/models/.gitkeep
+reports/*.png

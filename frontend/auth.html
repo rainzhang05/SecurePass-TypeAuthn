@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Authenticate · SecurePass-TypeAuthn</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Authenticate</h1>
+        <p class="badge">Step 2 · Verify identity &amp; retrieve TOTP</p>
+      </header>
+      <section class="card">
+        <div class="form-group">
+          <label for="authUserId">User ID</label>
+          <input type="text" id="authUserId" placeholder="e.g. alice" autocomplete="off" />
+        </div>
+        <p id="challenge" class="prompt-text">Start to fetch your challenge phrase.</p>
+        <textarea id="authTypingArea" rows="4" placeholder="Type the challenge phrase here..." disabled></textarea>
+        <div class="actions">
+          <button class="button" id="startAuth" type="button">Start authentication</button>
+          <button class="button" id="submitAuth" type="button">Submit</button>
+        </div>
+        <div id="authStatus" class="status"></div>
+        <p><a href="/">⬅ Back to dashboard</a></p>
+      </section>
+      <section class="card" id="dashboard" style="display: none;">
+        <h2>Secure Dashboard</h2>
+        <div class="alert-success" id="welcome"></div>
+        <div class="dashboard">
+          <div>
+            <h3>Live TOTP Code</h3>
+            <div class="totp-code" id="totpCode">------</div>
+            <p id="totpExpiry">Valid for 30 seconds</p>
+          </div>
+          <div class="qr-wrapper">
+            <h3>Authenticator Setup</h3>
+            <img id="totpQr" alt="TOTP QR Code" />
+            <p id="totpSecret"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+  </body>
+</html>

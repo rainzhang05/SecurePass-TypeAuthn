@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enroll · SecurePass-TypeAuthn</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Enroll Your Typing Profile</h1>
+        <p class="badge">Step 1 · Behavioral biometric capture</p>
+      </header>
+      <section class="card">
+        <div class="form-group">
+          <label for="userId">User ID</label>
+          <input type="text" id="userId" placeholder="e.g. alice" autocomplete="off" />
+        </div>
+        <div class="progress"><span id="progressFill"></span></div>
+        <p id="prompt" class="prompt-text">Press start to receive your prompts.</p>
+        <textarea
+          id="typingArea"
+          rows="5"
+          placeholder="Type the prompt text here..."
+          disabled
+        ></textarea>
+        <div class="actions">
+          <button class="button" id="startEnrollment" type="button">Start enrollment</button>
+          <button class="button" id="submitSample" type="button">Submit sample</button>
+        </div>
+        <p class="status">
+          Captured samples: <strong id="samplesCount">0</strong>
+        </p>
+        <div id="status"></div>
+        <p><a href="/">⬅ Back to dashboard</a></p>
+      </section>
+    </main>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/enroll.js"></script>
+  </body>
+</html>
