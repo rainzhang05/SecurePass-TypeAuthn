@@ -9,7 +9,7 @@ from typing import List
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score
+from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import OneClassSVM
@@ -30,22 +30,31 @@ MODEL_FILE = "model.pkl.enc"
 
 
 def _build_pipeline() -> Pipeline:
-    return Pipeline([
-        ("scaler", StandardScaler()),
-        (
-            "model",
-            OneClassSVM(kernel="rbf", gamma="auto", nu=0.05),
-        ),
-    ])
+    return Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("pca", PCA(n_components=0.95, whiten=True)),
+            (
+                "model",
+                OneClassSVM(kernel="rbf", gamma="scale", nu=0.08),
+            ),
+        ]
+    )
 
 
-def _calibrate_threshold(scores: np.ndarray) -> float:
-    mean = float(scores.mean())
-    std = float(scores.std())
-    if std == 0:
-        return mean - 1e-3
-    quantile = float(np.quantile(scores, 0.05))
-    return min(quantile, mean - 0.5 * std)
+def _generate_synthetic_impostors(X: np.ndarray, *, factor: int = 6) -> np.ndarray:
+    mean = np.mean(X, axis=0)
+    std = np.std(X, axis=0) + 1e-3
+    samples = max(factor * len(X), len(X))
+    return np.random.normal(loc=mean, scale=std, size=(samples, X.shape[1]))
+
+
+def _calibrate_threshold(positive_scores: np.ndarray, negative_scores: np.ndarray) -> float:
+    pos_quantile = float(np.quantile(positive_scores, 0.1))
+    neg_max = float(np.max(negative_scores))
+    neg_quantile = float(np.quantile(negative_scores, 0.9))
+    threshold = max(pos_quantile, min(neg_max, neg_quantile))
+    return min(threshold, float(np.max(positive_scores)))
 
 
 def train_user_model(user_id: str) -> TrainingResult:
@@ -57,7 +66,9 @@ def train_user_model(user_id: str) -> TrainingResult:
     pipeline.fit(X)
 
     scores = pipeline.decision_function(X)
-    threshold = _calibrate_threshold(scores)
+    impostor_samples = _generate_synthetic_impostors(X)
+    impostor_scores = pipeline.decision_function(impostor_samples)
+    threshold = _calibrate_threshold(scores, impostor_scores)
 
     buffer = io.BytesIO()
     joblib.dump(pipeline, buffer)
@@ -69,6 +80,9 @@ def train_user_model(user_id: str) -> TrainingResult:
             "threshold": float(threshold),
             "mean_score": float(scores.mean()),
             "std_score": float(scores.std()),
+            "impostor_mean": float(impostor_scores.mean()),
+            "impostor_std": float(impostor_scores.std()),
+            "impostor_max": float(impostor_scores.max()),
             "samples": int(len(df)),
         },
     )
@@ -81,7 +95,9 @@ def train_user_model(user_id: str) -> TrainingResult:
     )
 
 
-def add_sample_and_maybe_train(user_id: str, feature_vector: List[float], feature_names: List[str], *, min_samples: int = 3) -> TrainingResult | None:
+def add_sample_and_maybe_train(
+    user_id: str, feature_vector: List[float], feature_names: List[str], *, min_samples: int = 5
+) -> TrainingResult | None:
     df = append_features(user_id, feature_vector, feature_names)
     if len(df) >= min_samples:
         return train_user_model(user_id)

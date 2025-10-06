@@ -6,20 +6,37 @@
   <title>SecurePass-TypeAuthn</title>
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body>
+<body class="home-page page-transition">
   <div class="container">
     <h1>SecurePass-TypeAuthn</h1>
-    <p class="lead">AI-driven behavioral biometric authentication via keystroke dynamics.</p>
+    <p class="lead">
+      SecurePass-TypeAuthn analyzes the rhythm of your typing to build a private behavioral
+      biometric profile. Every key press and pause becomes part of a transparent, secure
+      authentication story.
+    </p>
+
+    <p class="section-description">
+      Get started below by first creating your profile and then testing the authentication
+      experience. Each area explains what to expect so you can type naturally and confidently.
+    </p>
+
     <div class="card-grid">
-      <a href="/static/enroll.html" class="card">
+      <a href="/static/enroll.html" class="card" data-transition>
         <h2>Enroll</h2>
-        <p>Capture your typing rhythm to create a personalized security profile.</p>
+        <p>
+          Record three guided typing samples so the model can learn your dwell, flight, and
+          pause patterns. We'll only keep anonymized timing data on your device.
+        </p>
       </a>
-      <a href="/static/auth.html" class="card">
+      <a href="/static/auth.html" class="card" data-transition>
         <h2>Authenticate</h2>
-        <p>Type a quick phrase to verify your identity and reveal your TOTP code.</p>
+        <p>
+          Verify your identity with a short phrase challenge, review the confidence score,
+          and unlock your time-based one-time password when the match succeeds.
+        </p>
       </a>
     </div>
   </div>
+  <script src="/static/js/transitions.js"></script>
 </body>
 </html>

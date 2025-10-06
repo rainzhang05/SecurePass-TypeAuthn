@@ -6,31 +6,57 @@
   <title>Enroll - SecurePass-TypeAuthn</title>
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body>
+<body class="page-transition">
   <div class="container">
     <h1>Enrollment</h1>
-    <p class="lead">Type the prompts naturally. We only record timing metadata.</p>
+    <p class="lead">
+      Capture how you naturally type. Each prompt records the press and release timing to
+      craft a secure profile without storing what you actually wrote.
+    </p>
+    <p class="section-description">
+      You'll complete three short prompts. After each one we analyze your rhythm, update your
+      model, and show progress until training is complete.
+    </p>
     <div class="form-group">
       <label for="userId">User ID</label>
       <input id="userId" type="text" placeholder="Enter a unique username" />
     </div>
     <button id="startEnrollment" class="btn">Start Enrollment</button>
-    <div id="progress" class="progress hidden">
+    <div id="progress" class="progress hidden animated-section">
       <div class="progress-bar" id="progressBar"></div>
     </div>
-    <div id="promptContainer" class="prompt hidden">
+    <div id="promptContainer" class="prompt hidden animated-section">
       <p id="promptText"></p>
+      <div id="promptChars" class="prompt-characters"></div>
       <textarea id="typingArea" rows="4" placeholder="Start typing the prompt..."></textarea>
-      <p id="status"></p>
+      <p id="status" class="status-message"></p>
     </div>
-    <div id="totpSetup" class="totp hidden">
+    <div id="totpSetup" class="totp hidden animated-section">
       <h2>Set up Two-Factor Authentication</h2>
-      <p>Scan the QR code in your authenticator app or use the secret below.</p>
+      <p>
+        Pair the generated secret with your authenticator app to add a backup factor. This QR
+        code only appears after your typing profile has been trained successfully.
+      </p>
       <img id="totpQr" alt="TOTP QR" />
       <p id="totpSecret"></p>
     </div>
-    <a href="/" class="link">Back to home</a>
+    <section class="saved-section">
+      <div class="saved-header">
+        <h2>Saved IDs</h2>
+        <p class="section-description">
+          Registered profiles appear here. Remove any you no longer need to clear the stored model
+          and timing data from this device.
+        </p>
+      </div>
+      <ul id="savedIdsList" class="saved-list"></ul>
+      <p id="savedIdsEmpty" class="empty-state hidden">No trained profiles yet.</p>
+    </section>
+
+    <div class="button-row">
+      <button id="backHome" type="button" class="btn btn-secondary">Back to Home</button>
+    </div>
   </div>
+  <script src="/static/js/transitions.js"></script>
   <script src="/static/js/api.js"></script>
   <script src="/static/js/enroll.js"></script>
 </body>

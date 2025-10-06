@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import json
+import shutil
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -32,11 +33,31 @@ def get_user_model_dir(user_id: str) -> Path:
     return path
 
 
+def list_user_ids() -> List[str]:
+    """Return identifiers that currently have trained model artifacts."""
+    if not MODEL_DIR.exists():
+        return []
+    users: List[str] = []
+    for user_dir in MODEL_DIR.iterdir():
+        if user_dir.is_dir() and any(user_dir.iterdir()):
+            users.append(user_dir.name)
+    return sorted(users)
+
+
 def read_json(path: Path) -> dict:
     if not path.exists():
         return {}
     data = read_encrypted(path)
-    return json.loads(data.decode("utf-8"))
+    decoded = data.decode("utf-8").strip()
+    if not decoded:
+        return {}
+    try:
+        return json.loads(decoded)
+    except json.JSONDecodeError:
+        # Older secrets may have been stored as raw strings; normalize them into JSON.
+        payload = {"value": decoded}
+        write_json(path, payload)
+        return payload
 
 
 def write_json(path: Path, payload: dict) -> None:
@@ -89,4 +110,15 @@ def load_secret(user_id: str, name: str) -> Optional[str]:
         return None
     payload = read_json(path)
     return payload.get("value")
+
+
+def delete_user_artifacts(user_id: str) -> bool:
+    """Remove stored data, models, and secrets for ``user_id``."""
+    existed = False
+    for base in (DATA_DIR, MODEL_DIR, SECRETS_DIR):
+        target = base / user_id
+        if target.exists():
+            existed = True
+            shutil.rmtree(target, ignore_errors=True)
+    return existed
 

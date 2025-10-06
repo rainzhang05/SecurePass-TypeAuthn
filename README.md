@@ -54,17 +54,49 @@ securepass-typeauthn/
 
 ### Installation
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+#### Create a virtual environment
+
+- **macOS / Linux**
+
+  ```bash
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
+- **Windows (PowerShell)**
+
+  ```powershell
+  py -3 -m venv .venv
+  .\.venv\Scripts\Activate.ps1
+  ```
+
+#### Install dependencies
+
+- **macOS / Linux**
+
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- **Windows (PowerShell)**
+
+  ```powershell
+  pip install -r requirements.txt
+  ```
 
 ### Running the Stack
 
-```bash
-python backend/app.py
-```
+- **macOS / Linux**
+
+  ```bash
+  python backend/app.py
+  ```
+
+- **Windows (PowerShell)**
+
+  ```powershell
+  python backend/app.py
+  ```
 
 Open [http://localhost:8000](http://localhost:8000) to access the web UI. Static assets are served directly by FastAPI.
 
