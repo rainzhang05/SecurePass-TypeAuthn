@@ -14,12 +14,21 @@
   const savedList = document.getElementById('savedIdsList');
   const savedEmpty = document.getElementById('savedIdsEmpty');
   const backHome = document.getElementById('backHome');
+  const restartBtn = document.getElementById('restartEnrollment');
   const transitions = window.SecurePassTransitions;
 
   let prompts = [];
   let currentIndex = 0;
   let events = [];
   let trainingActive = false;
+  let savedUserIds = [];
+  let activeUserId = '';
+  let sessionLocked = false;
+
+  startBtn.disabled = true;
+  if (restartBtn) {
+    restartBtn.disabled = true;
+  }
 
   function showSection(element) {
     if (!element) {
@@ -51,9 +60,43 @@
     status.textContent = '';
     promptChars.innerHTML = '';
     typingArea.value = '';
+    typingArea.disabled = false;
     hideSection(promptContainer);
     hideSection(progress);
     hideSection(totpSection);
+    if (restartBtn) {
+      restartBtn.disabled = true;
+    }
+  }
+
+  function isPromptActive() {
+    return !promptContainer.classList.contains('hidden');
+  }
+
+  function updateStartAvailability() {
+    const userId = userInput.value.trim();
+    const isDuplicate = savedUserIds.includes(userId);
+    const shouldDisable = sessionLocked || !userId || isDuplicate;
+    startBtn.disabled = shouldDisable;
+  }
+
+  function handleUserIdInput() {
+    const userId = userInput.value.trim();
+    if (userId !== activeUserId) {
+      sessionLocked = false;
+    } else if (activeUserId) {
+      sessionLocked = true;
+    }
+    if (!isPromptActive()) {
+      if (!userId) {
+        status.textContent = '';
+      } else if (savedUserIds.includes(userId)) {
+        status.textContent = `User ID "${userId}" already exists. Choose a different one.`;
+      } else if (!sessionLocked) {
+        status.textContent = '';
+      }
+    }
+    updateStartAvailability();
   }
 
   function sanitizeKey(event) {
@@ -117,11 +160,13 @@
     try {
       const payload = await window.SecurePassAPI.get('/users');
       const users = payload.users || [];
+      savedUserIds = users.slice();
       savedList.innerHTML = '';
       if (!users.length) {
         savedList.classList.add('hidden');
         savedEmpty.classList.remove('hidden');
         savedEmpty.textContent = 'No trained profiles yet.';
+        updateStartAvailability();
         return;
       }
       savedList.classList.remove('hidden');
@@ -140,10 +185,61 @@
         item.appendChild(remove);
         savedList.appendChild(item);
       });
+      updateStartAvailability();
     } catch (err) {
       savedList.classList.add('hidden');
       savedEmpty.classList.remove('hidden');
       savedEmpty.textContent = `Unable to load saved IDs: ${err.message}`;
+      savedUserIds = [];
+      updateStartAvailability();
+    }
+  }
+
+  async function beginEnrollment({ isRestart = false } = {}) {
+    const userId = userInput.value.trim();
+    if (!userId) {
+      status.textContent = 'User ID required.';
+      sessionLocked = false;
+      updateStartAvailability();
+      return;
+    }
+    if (savedUserIds.includes(userId)) {
+      status.textContent = `User ID "${userId}" already exists. Choose a different one.`;
+      sessionLocked = false;
+      updateStartAvailability();
+      return;
+    }
+    sessionLocked = true;
+    activeUserId = userId;
+    startBtn.disabled = true;
+    if (restartBtn) {
+      restartBtn.disabled = true;
+    }
+    userInput.disabled = true;
+    resetState();
+    status.textContent = isRestart ? 'Restarting enrollment...' : 'Preparing prompts...';
+    try {
+      const payload = await window.SecurePassAPI.post('/enroll/start', { user_id: userId });
+      prompts = payload.prompts || [];
+      if (!prompts.length) {
+        status.textContent = 'No prompts available.';
+        userInput.disabled = false;
+        sessionLocked = false;
+        updateStartAvailability();
+        return;
+      }
+      showSection(progress);
+      showSection(promptContainer);
+      preparePrompt();
+      status.textContent = 'Type the prompt and press Enter to submit.';
+      if (restartBtn) {
+        restartBtn.disabled = false;
+      }
+    } catch (err) {
+      status.textContent = err.message;
+      sessionLocked = false;
+      userInput.disabled = false;
+      updateStartAvailability();
     }
   }
 
@@ -184,6 +280,9 @@
       progressBar.style.width = pct + '%';
       if (currentIndex < prompts.length) {
         status.textContent = `Sample ${currentIndex}/${prompts.length} saved. Training paused—start the next prompt.`;
+        if (restartBtn) {
+          restartBtn.disabled = false;
+        }
         preparePrompt();
       } else {
         typingArea.value = '';
@@ -196,6 +295,12 @@
         } else {
           status.textContent = 'All samples captured.';
         }
+        if (restartBtn) {
+          restartBtn.disabled = true;
+        }
+        userInput.disabled = false;
+        sessionLocked = true;
+        updateStartAvailability();
       }
     } catch (err) {
       status.textContent = err.message;
@@ -235,6 +340,10 @@
   }
 
   function attachListeners() {
+    if (userInput) {
+      userInput.addEventListener('input', handleUserIdInput);
+    }
+
     typingArea.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' && !ev.shiftKey) {
         ev.preventDefault();
@@ -278,32 +387,19 @@
     }
   }
 
-  startBtn.addEventListener('click', async () => {
-    const userId = userInput.value.trim();
-    if (!userId) {
-      status.textContent = 'User ID required.';
-      return;
-    }
-    startBtn.disabled = true;
-    userInput.disabled = true;
-    try {
-      resetState();
-      const payload = await window.SecurePassAPI.post('/enroll/start', { user_id: userId });
-      prompts = payload.prompts || [];
-      if (!prompts.length) {
-        status.textContent = 'No prompts available.';
-        return;
-      }
-      preparePrompt();
-      showSection(progress);
-      showSection(promptContainer);
-      status.textContent = 'Type the prompt and press Enter to submit.';
-    } catch (err) {
-      status.textContent = err.message;
-    } finally {
-      startBtn.disabled = false;
+  startBtn.addEventListener('click', () => {
+    if (!sessionLocked) {
+      beginEnrollment();
     }
   });
+
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+      if (userInput.disabled) {
+        beginEnrollment({ isRestart: true });
+      }
+    });
+  }
 
   refreshSavedIds();
   attachListeners();

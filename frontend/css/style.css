@@ -217,6 +217,20 @@ textarea::placeholder {
   margin-top: 1.5rem;
 }
 
+.prompt textarea::placeholder,
+#authArea::placeholder,
+#typingArea::placeholder {
+  color: #000;
+  opacity: 1;
+}
+
+.prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
 .animated-section {
   opacity: 0;
   transform: translateY(16px);
