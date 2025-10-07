@@ -7,67 +7,128 @@ from pathlib import Path
 from typing import Dict, List
 
 import joblib
+import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import auc, roc_curve
 
-from backend.utils.storage import DATA_DIR, get_user_model_dir, load_features, load_model_artifact, read_json
-from backend.utils.train_model import MODEL_FILE, THRESHOLD_FILE
+from backend.utils.storage import (
+    DATA_DIR,
+    get_user_model_dir,
+    load_features,
+    load_model_artifact,
+    read_json,
+)
+from backend.utils.train_model import MODEL_FILE, SCALER_FILE, THRESHOLD_FILE
+
+REPORTS_DIR = Path("reports")
+REPORTS_DIR.mkdir(exist_ok=True)
 
 
-def _load_threshold_meta(user_id: str) -> Dict[str, float]:
-    path = get_user_model_dir(user_id) / THRESHOLD_FILE
-    if not path.exists():
-        return {}
-    return read_json(path)
+def _normalize(score: np.ndarray, stats: Dict[str, float]) -> np.ndarray:
+    return (score - stats.get("mean", 0.0)) / (stats.get("std", 1.0) or 1.0)
 
 
-def _evaluate_user(user_id: str) -> Dict[str, float]:
+def _generate_impostors(X: np.ndarray, *, multiplier: int = 5) -> np.ndarray:
+    if X.size == 0:
+        return X
+    cov = np.cov(X, rowvar=False)
+    if np.isscalar(cov):
+        cov = np.array([[float(cov) + 1e-3]])
+    else:
+        cov = np.asarray(cov) + np.eye(X.shape[1]) * 1e-3
+    mean = np.mean(X, axis=0)
+    size = max(multiplier * len(X), len(X))
+    rng = np.random.default_rng(123)
+    try:
+        samples = rng.multivariate_normal(mean, cov, size=size)
+    except np.linalg.LinAlgError:
+        samples = rng.normal(loc=mean, scale=np.sqrt(np.diag(cov) + 1e-3), size=(size, X.shape[1]))
+    return samples
+
+
+def _evaluate_user(user_id: str) -> Dict[str, object]:
     features = load_features(user_id)
     if features.empty:
         return {}
-    pipeline_bytes = load_model_artifact(user_id, MODEL_FILE)
-    if pipeline_bytes is None:
+
+    model_bytes = load_model_artifact(user_id, MODEL_FILE)
+    scaler_bytes = load_model_artifact(user_id, SCALER_FILE)
+    if model_bytes is None or scaler_bytes is None:
         return {}
-    pipeline = joblib.load(io.BytesIO(pipeline_bytes))
-    meta = _load_threshold_meta(user_id)
-    threshold = float(meta.get("threshold", 0.0))
+
+    bundle = joblib.load(io.BytesIO(model_bytes))
+    scaler = joblib.load(io.BytesIO(scaler_bytes))
+    thresholds = read_json(get_user_model_dir(user_id) / THRESHOLD_FILE)
+    if not thresholds:
+        return {}
 
     X = features.values.astype(float)
-    scores = pipeline.decision_function(X)
-    fr = float(np.mean(scores < threshold))
+    scaled = scaler.transform(X)
 
-    impostor = np.random.normal(
-        loc=np.mean(X, axis=0),
-        scale=np.std(X, axis=0) + 1e-3,
-        size=(max(5, len(X)), X.shape[1]),
+    svm = bundle["svm"]
+    iforest = bundle["isolation_forest"]
+    stats = bundle.get("score_stats", {})
+
+    svm_scores = svm.decision_function(scaled)
+    if_scores = iforest.score_samples(scaled)
+    ensemble_scores = 0.5 * (_normalize(svm_scores, stats.get("svm", {})) + _normalize(if_scores, stats.get("iforest", {})))
+    threshold = float(thresholds.get("threshold", 0.0))
+
+    impostors = _generate_impostors(scaled)
+    svm_impostor = svm.decision_function(impostors)
+    if_impostor = iforest.score_samples(impostors)
+    ensemble_impostor = 0.5 * (
+        _normalize(svm_impostor, stats.get("svm", {})) + _normalize(if_impostor, stats.get("iforest", {}))
     )
-    impostor_scores = pipeline.decision_function(impostor)
-    fa = float(np.mean(impostor_scores >= threshold))
 
-    genuine_accept = float(np.mean(scores >= threshold))
-    impostor_reject = float(np.mean(impostor_scores < threshold))
+    far = float(np.mean(ensemble_impostor >= threshold))
+    frr = float(np.mean(ensemble_scores < threshold))
     accuracy = float(
-        (genuine_accept * len(scores) + impostor_reject * len(impostor_scores))
-        / (len(scores) + len(impostor_scores))
+        (
+            np.sum(ensemble_scores >= threshold) + np.sum(ensemble_impostor < threshold)
+        )
+        / (len(ensemble_scores) + len(ensemble_impostor))
     )
 
-    eer = float((fa + fr) / 2.0)
+    labels = np.concatenate([np.ones_like(ensemble_scores), np.zeros_like(ensemble_impostor)])
+    roc_scores = np.concatenate([ensemble_scores, ensemble_impostor])
+    fpr, tpr, _ = roc_curve(labels, roc_scores)
+    roc_auc = float(auc(fpr, tpr))
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(fpr, tpr, label=f"AUC={roc_auc:.3f}")
+    plt.plot([0, 1], [0, 1], linestyle="--", color="gray")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(f"ROC Curve - {user_id}")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(REPORTS_DIR / f"{user_id}_roc.png")
+    plt.close()
+
+    feature_importance = {}
+    if hasattr(iforest, "feature_importances_"):
+        importances = iforest.feature_importances_
+        for name, value in sorted(zip(features.columns, importances), key=lambda x: x[1], reverse=True):
+            feature_importance[name] = float(value)
 
     return {
         "user_id": user_id,
-        "samples": int(len(X)),
+        "samples": int(len(features)),
         "threshold": threshold,
-        "far": fa,
-        "frr": fr,
+        "far": far,
+        "frr": frr,
         "accuracy": accuracy,
-        "eer": eer,
+        "auc": roc_auc,
+        "confidence_mean": float(np.mean(ensemble_scores)),
+        "confidence_std": float(np.std(ensemble_scores)),
+        "feature_importance": feature_importance,
+        "roc_curve": f"{user_id}_roc.png",
     }
 
 
 def main() -> None:
-    reports_dir = Path("reports")
-    reports_dir.mkdir(exist_ok=True)
-    metrics: List[Dict[str, float]] = []
-
+    metrics: List[Dict[str, object]] = []
     for user_dir in DATA_DIR.glob("*"):
         if not user_dir.is_dir():
             continue
@@ -76,10 +137,8 @@ def main() -> None:
         if result:
             metrics.append(result)
 
-    payload = {"users": metrics}
-    (reports_dir / "metrics.json").write_text(json.dumps(payload, indent=2))
+    (REPORTS_DIR / "metrics.json").write_text(json.dumps({"users": metrics}, indent=2))
 
 
 if __name__ == "__main__":
     main()
-

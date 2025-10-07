@@ -19,7 +19,8 @@ def test_extract_features_basic():
     feature_vector = extract_features(events)
     assert feature_vector.features.shape[0] == len(feature_vector.names)
     data = feature_vector.as_dict()
-    assert data["dwell_mean"] >= 0
-    assert data["flight_mean"] >= 0
-    assert data["error_rate"] > 0
+    assert data["mean_dwell"] >= 0
+    assert data["mean_flight"] >= 0
+    assert data["backspace_ratio"] > 0
+    assert "confidence_history" not in data
 

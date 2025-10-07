@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
+import logging
 import sys
+import threading
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -59,6 +62,7 @@ class AuthStartRequest(BaseModel):
 class AuthSubmitRequest(BaseModel):
     user_id: str
     events: List[Dict]
+    continuous_learn: bool = False
 
 
 class TotpSetupRequest(BaseModel):
@@ -153,15 +157,23 @@ def enroll_start(payload: EnrollmentStartRequest):
 @app.post("/enroll/submit")
 def enroll_submit(payload: EnrollmentSubmitRequest):
     feature_vector = extract_features(payload.events)
+    session_id = uuid.uuid4().hex
+    timestamp = datetime.utcnow()
+    checksum = hashlib.sha256(orjson.dumps(payload.events, option=orjson.OPT_SORT_KEYS)).hexdigest()
     training = add_sample_and_maybe_train(
         payload.user_id,
-        feature_vector.features.tolist(),
+        feature_vector.raw.tolist(),
         list(feature_vector.names),
         min_samples=len(PROMPTS),
+        session_id=session_id,
+        timestamp=timestamp,
+        checksum=checksum,
     )
     response: Dict[str, object] = {
         "features": feature_vector.as_dict(),
         "stored_samples": training.samples if isinstance(training, TrainingResult) else None,
+        "session_id": session_id,
+        "timestamp": timestamp.isoformat(),
     }
     if isinstance(training, TrainingResult):
         response.update(
@@ -194,6 +206,27 @@ def auth_submit(payload: AuthSubmitRequest):
 
     if result["accepted"]:
         auth_token = session_store.issue(payload.user_id)
+        if payload.continuous_learn:
+            checksum = hashlib.sha256(
+                orjson.dumps(payload.events, option=orjson.OPT_SORT_KEYS)
+            ).hexdigest()
+
+            def _background_update() -> None:
+                try:
+                    add_sample_and_maybe_train(
+                        payload.user_id,
+                        feature_vector.raw.tolist(),
+                        list(feature_vector.names),
+                        min_samples=len(PROMPTS),
+                        auto_retrain_samples=10,
+                        session_id=uuid.uuid4().hex,
+                        timestamp=datetime.utcnow(),
+                        checksum=checksum,
+                    )
+                except Exception as exc:  # pragma: no cover - background logging only
+                    logging.getLogger(__name__).warning("Continuous learning failed: %s", exc)
+
+            threading.Thread(target=_background_update, daemon=True).start()
     else:
         auth_token = None
 
