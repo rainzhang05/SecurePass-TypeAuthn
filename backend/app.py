@@ -88,7 +88,7 @@ PROMPTS = [
         "between thoughts, purposeful corrections, and steady bursts of motion."
     ),
     (
-        "Each measured keystroke paints a consistent portrait—focus on clarity, "
+        "Each measured keystroke paints a consistent portrait - focus on clarity, "
         "finish every sentence, and let the timing tell your story with intent."
     ),
 ]

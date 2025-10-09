@@ -78,6 +78,7 @@
     const isDuplicate = savedUserIds.includes(userId);
     const shouldDisable = sessionLocked || !userId || isDuplicate;
     startBtn.disabled = shouldDisable;
+    startBtn.classList.toggle('is-locked', sessionLocked && Boolean(userId) && !isDuplicate);
   }
 
   function handleUserIdInput() {
@@ -111,7 +112,12 @@
     text.split('').forEach((char, index) => {
       const span = document.createElement('span');
       span.dataset.index = String(index);
-      span.textContent = char === ' ' ? ' ' : char;
+      if (char === ' ') {
+        span.classList.add('space');
+        span.textContent = ' ';
+      } else {
+        span.textContent = char;
+      }
       promptChars.appendChild(span);
     });
     if (!text.length) {
@@ -212,6 +218,7 @@
     sessionLocked = true;
     activeUserId = userId;
     startBtn.disabled = true;
+    updateStartAvailability();
     if (restartBtn) {
       restartBtn.disabled = true;
     }

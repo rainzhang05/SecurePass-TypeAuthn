@@ -26,7 +26,7 @@
   let dropdownDisabled = true;
   let availableUsers = [];
   let selectedUser = '';
-  let lastStartedUser = '';
+  let lockedUserId = '';
   let sessionLocked = false;
 
   textarea.disabled = true;
@@ -71,7 +71,12 @@
     text.split('').forEach((char, index) => {
       const span = document.createElement('span');
       span.dataset.index = String(index);
-      span.textContent = char === ' ' ? ' ' : char;
+      if (char === ' ') {
+        span.classList.add('space');
+        span.textContent = ' ';
+      } else {
+        span.textContent = char;
+      }
       challengeChars.appendChild(span);
     });
     if (!text.length) {
@@ -118,9 +123,11 @@
   function updateStartButtonState() {
     if (!selectedUser) {
       startBtn.disabled = true;
+      startBtn.classList.remove('is-locked');
       return;
     }
     startBtn.disabled = sessionLocked;
+    startBtn.classList.toggle('is-locked', sessionLocked);
   }
 
   function handleTypingInput() {
@@ -178,7 +185,7 @@
     });
     if (userId) {
       updateDropdownLabel(userId);
-      sessionLocked = userId === lastStartedUser && Boolean(lastStartedUser);
+      sessionLocked = Boolean(lockedUserId) && userId === lockedUserId;
       if (!silent && userId !== previousUser) {
         status.textContent = '';
       }
@@ -218,6 +225,7 @@
         dropdownMenu.appendChild(emptyState);
         setDropdownDisabled(true);
         selectUser('', { silent: true });
+        lockedUserId = '';
         sessionLocked = false;
         resetChallengeDisplay();
         updateStartButtonState();
@@ -249,6 +257,7 @@
       dropdownMenu.appendChild(errorState);
       setDropdownDisabled(true);
       selectUser('', { silent: true });
+      lockedUserId = '';
       sessionLocked = false;
       resetChallengeDisplay();
       updateStartButtonState();
@@ -289,7 +298,7 @@
       showSection(container);
       hideSection(totpSection);
       status.textContent = 'Type the phrase and press Enter.';
-      lastStartedUser = userId;
+      lockedUserId = userId;
       events = [];
       captureActive = false;
       sessionActive = true;

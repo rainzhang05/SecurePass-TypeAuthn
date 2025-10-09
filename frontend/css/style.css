@@ -220,7 +220,7 @@ textarea::placeholder {
 .prompt textarea::placeholder,
 #authArea::placeholder,
 #typingArea::placeholder {
-  color: #000;
+  color: #000 !important;
   opacity: 1;
 }
 
@@ -318,13 +318,19 @@ select:focus {
   line-height: 1.6;
   letter-spacing: 0.02em;
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .prompt-characters span {
-  display: inline;
+  display: inline-block;
   padding: 0.05rem 0.2rem;
   border-radius: 0.4rem;
   transition: background 0.2s ease, color 0.2s ease;
+  vertical-align: baseline;
+}
+
+.prompt-characters span.space {
+  min-width: 0.5em;
 }
 
 .prompt-characters span.correct {
