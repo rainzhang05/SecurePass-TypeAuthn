@@ -75,28 +75,12 @@ class TotpRevealRequest(BaseModel):
 
 
 PROMPTS = [
-    (
-        "Secure typing builds trust in digital worlds when you maintain a calm, "
-        "deliberate cadence that the model can recognize."
-    ),
-    (
-        "Behavioral biometrics adds a unique protection layer, so breathe steadily "
-        "and let your natural rhythm flow across the keyboard as you type."
-    ),
-    (
-        "Type naturally; tiny rhythms secure your account by capturing pauses "
-        "between thoughts, purposeful corrections, and steady bursts of motion."
-    ),
-    (
-        "Each measured keystroke paints a consistent portrait - focus on clarity, "
-        "finish every sentence, and let the timing tell your story with intent."
-    ),
+    "Secure typing builds trust in digital worlds.",
+    "Behavioral biometrics adds a unique protection layer.",
+    "Type naturally; tiny rhythms secure your account.",
 ]
 
-CHALLENGE = (
-    "SecurePass relies on nuanced timing patterns to confirm your identity. Type "
-    "this entire challenge mindfully with smooth, confident pacing."
-)
+CHALLENGE = "secure pass authentication"
 
 
 class SessionStore:

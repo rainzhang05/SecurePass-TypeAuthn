@@ -132,6 +132,7 @@ def verify_sample(user_id: str, feature_vector: FeatureVector, *, log_confidence
         "svm_score": svm_score,
         "iforest_score": if_score,
         "ensemble_score": ensemble_confidence,
+        "score": ensemble_confidence,
         "threshold": ensemble_threshold,
         "svm_threshold": svm_threshold,
         "iforest_threshold": if_threshold,
