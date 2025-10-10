@@ -27,11 +27,14 @@
         <div id="authDropdownMenu" class="dropdown-menu" role="listbox"></div>
       </div>
     </div>
-    <button id="startAuth" class="btn">Start Authentication</button>
+    <button id="startAuth" type="button" class="btn">Start Authentication</button>
     <div id="challengeContainer" class="prompt hidden animated-section">
       <p id="challengeText"></p>
       <div id="challengeChars" class="prompt-characters"></div>
       <textarea id="authArea" rows="3" placeholder="Type the challenge phrase..."></textarea>
+      <div class="button-row prompt-actions">
+        <button id="restartAuth" type="button" class="btn btn-secondary">Restart</button>
+      </div>
       <p id="authStatus" class="status-message"></p>
     </div>
     <div id="totp" class="totp hidden animated-section">

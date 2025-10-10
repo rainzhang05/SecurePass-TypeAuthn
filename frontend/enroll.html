@@ -21,7 +21,7 @@
       <label for="userId">User ID</label>
       <input id="userId" type="text" placeholder="Enter a unique username" />
     </div>
-    <button id="startEnrollment" class="btn">Start Enrollment</button>
+    <button id="startEnrollment" class="btn" type="button">Start Enrollment</button>
     <div id="progress" class="progress hidden animated-section">
       <div class="progress-bar" id="progressBar"></div>
     </div>
@@ -29,6 +29,9 @@
       <p id="promptText"></p>
       <div id="promptChars" class="prompt-characters"></div>
       <textarea id="typingArea" rows="4" placeholder="Start typing the prompt..."></textarea>
+      <div class="button-row prompt-actions">
+        <button id="restartEnrollment" type="button" class="btn btn-secondary">Restart</button>
+      </div>
       <p id="status" class="status-message"></p>
     </div>
     <div id="totpSetup" class="totp hidden animated-section">

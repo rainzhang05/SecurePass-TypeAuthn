@@ -12,6 +12,7 @@
   const totpSection = document.getElementById('totp');
   const totpCode = document.getElementById('totpCode');
   const backHome = document.getElementById('authBackHome');
+  const restartBtn = document.getElementById('restartAuth');
   const transitions = window.SecurePassTransitions;
 
   if (!startBtn || !dropdown || !dropdownToggle || !dropdownMenu || !dropdownLabel || !textarea || !status) {
@@ -25,9 +26,16 @@
   let dropdownDisabled = true;
   let availableUsers = [];
   let selectedUser = '';
+  let lockedUserId = '';
+  let sessionLocked = false;
 
   textarea.disabled = true;
   setDropdownDisabled(true);
+  startBtn.disabled = true;
+  if (restartBtn) {
+    restartBtn.disabled = true;
+  }
+  resetChallengeDisplay();
 
   function showSection(element) {
     if (!element) {
@@ -63,7 +71,12 @@
     text.split('').forEach((char, index) => {
       const span = document.createElement('span');
       span.dataset.index = String(index);
-      span.textContent = char === ' ' ? ' ' : char;
+      if (char === ' ') {
+        span.classList.add('space');
+        span.textContent = ' ';
+      } else {
+        span.textContent = char;
+      }
       challengeChars.appendChild(span);
     });
     if (!text.length) {
@@ -87,6 +100,34 @@
         span.classList.add('active');
       }
     });
+  }
+
+  function resetChallengeDisplay() {
+    challengePhrase = '';
+    challengeText.textContent = '';
+    challengeChars.innerHTML = '';
+    challengeChars.classList.add('hidden');
+    textarea.value = '';
+    textarea.disabled = true;
+    updateChallengeHighlights('');
+    hideSection(container);
+    hideSection(totpSection);
+    events = [];
+    captureActive = false;
+    sessionActive = false;
+    if (restartBtn) {
+      restartBtn.disabled = true;
+    }
+  }
+
+  function updateStartButtonState() {
+    if (!selectedUser) {
+      startBtn.disabled = true;
+      startBtn.classList.remove('is-locked');
+      return;
+    }
+    startBtn.disabled = sessionLocked;
+    startBtn.classList.toggle('is-locked', sessionLocked);
   }
 
   function handleTypingInput() {
@@ -133,6 +174,7 @@
   }
 
   function selectUser(userId, { silent } = { silent: false }) {
+    const previousUser = selectedUser;
     selectedUser = userId;
     const options = dropdownMenu.querySelectorAll('.dropdown-option');
     options.forEach((opt) => {
@@ -143,14 +185,21 @@
     });
     if (userId) {
       updateDropdownLabel(userId);
-      startBtn.disabled = false;
-      if (!silent) {
+      sessionLocked = Boolean(lockedUserId) && userId === lockedUserId;
+      if (!silent && userId !== previousUser) {
         status.textContent = '';
       }
     } else {
       updateDropdownLabel('Select a saved ID');
-      startBtn.disabled = true;
+      sessionLocked = false;
+      if (!silent) {
+        status.textContent = 'Select a saved ID to begin.';
+      }
     }
+    if (!silent && userId !== previousUser) {
+      resetChallengeDisplay();
+    }
+    updateStartButtonState();
   }
 
   function toggleDropdown() {
@@ -176,7 +225,10 @@
         dropdownMenu.appendChild(emptyState);
         setDropdownDisabled(true);
         selectUser('', { silent: true });
-        startBtn.disabled = true;
+        lockedUserId = '';
+        sessionLocked = false;
+        resetChallengeDisplay();
+        updateStartButtonState();
         status.textContent = 'Enroll a profile to begin authentication.';
         return;
       }
@@ -195,6 +247,7 @@
       } else {
         selectUser('', { silent: true });
       }
+      updateStartButtonState();
       status.textContent = '';
     } catch (err) {
       dropdownMenu.innerHTML = '';
@@ -204,8 +257,62 @@
       dropdownMenu.appendChild(errorState);
       setDropdownDisabled(true);
       selectUser('', { silent: true });
-      startBtn.disabled = true;
+      lockedUserId = '';
+      sessionLocked = false;
+      resetChallengeDisplay();
+      updateStartButtonState();
       status.textContent = `Unable to load saved IDs: ${err.message}`;
+    }
+  }
+
+  function formatScore(result) {
+    if (!result || typeof result.score !== 'number' || Number.isNaN(result.score)) {
+      return 'N/A';
+    }
+    return result.score.toFixed(3);
+  }
+
+  async function beginAuthSession({ isRestart = false } = {}) {
+    const userId = selectedUser;
+    if (!userId) {
+      status.textContent = 'Select a saved ID first.';
+      return;
+    }
+    sessionLocked = true;
+    updateStartButtonState();
+    setDropdownDisabled(true);
+    if (restartBtn) {
+      restartBtn.disabled = true;
+    }
+    resetChallengeDisplay();
+    status.textContent = isRestart ? 'Restarting challenge...' : 'Preparing challenge...';
+    try {
+      const payload = await window.SecurePassAPI.post('/auth/start', { user_id: userId });
+      challengePhrase = payload.challenge || '';
+      challengeText.textContent = challengePhrase;
+      renderChallengeCharacters(challengePhrase);
+      updateChallengeHighlights('');
+      textarea.value = '';
+      textarea.disabled = false;
+      textarea.focus();
+      showSection(container);
+      hideSection(totpSection);
+      status.textContent = 'Type the phrase and press Enter.';
+      lockedUserId = userId;
+      events = [];
+      captureActive = false;
+      sessionActive = true;
+      if (restartBtn) {
+        restartBtn.disabled = false;
+      }
+    } catch (err) {
+      status.textContent = err.message;
+      sessionLocked = false;
+      resetChallengeDisplay();
+      if (availableUsers.length) {
+        setDropdownDisabled(false);
+      }
+      updateStartButtonState();
     }
   }
 
@@ -226,11 +333,12 @@
         user_id: selectedUser,
         events
       });
-      if (response.result.accepted) {
-        status.textContent = `Verified ✅ (score ${response.result.score.toFixed(3)})`;
+      const scoreLabel = formatScore(response.result);
+      if (response.result && response.result.accepted) {
+        status.textContent = `Verified ✅ (score ${scoreLabel})`;
         await revealTotp(response.auth_token);
       } else {
-        status.textContent = `Denied ❌ (score ${response.result.score.toFixed(3)})`;
+        status.textContent = `Denied ❌ (score ${scoreLabel})`;
         hideSection(totpSection);
       }
     } catch (err) {
@@ -247,7 +355,10 @@
       if (availableUsers.length) {
         setDropdownDisabled(false);
       }
-      startBtn.disabled = false;
+      if (restartBtn && selectedUser) {
+        restartBtn.disabled = false;
+      }
+      updateStartButtonState();
     }
   }
 
@@ -298,6 +409,16 @@
       });
     }
 
+    if (restartBtn) {
+      restartBtn.addEventListener('click', () => {
+        if (!selectedUser) {
+          status.textContent = 'Select a saved ID first.';
+          return;
+        }
+        beginAuthSession({ isRestart: true });
+      });
+    }
+
     dropdownToggle.addEventListener('click', (event) => {
       event.stopPropagation();
       toggleDropdown();
@@ -327,35 +448,9 @@
     });
   }
 
-  startBtn.addEventListener('click', async () => {
-    const userId = selectedUser;
-    if (!userId) {
-      status.textContent = 'Select a saved ID first.';
-      return;
-    }
-    startBtn.disabled = true;
-    setDropdownDisabled(true);
-    try {
-      const payload = await window.SecurePassAPI.post('/auth/start', { user_id: userId });
-      challengePhrase = payload.challenge;
-      challengeText.textContent = challengePhrase;
-      renderChallengeCharacters(challengePhrase);
-      updateChallengeHighlights('');
-      textarea.value = '';
-      textarea.disabled = false;
-      textarea.focus();
-      showSection(container);
-      hideSection(totpSection);
-      status.textContent = 'Type the phrase and press Enter.';
-      events = [];
-      captureActive = false;
-      sessionActive = true;
-    } catch (err) {
-      status.textContent = err.message;
-      if (availableUsers.length) {
-        setDropdownDisabled(false);
-      }
-      startBtn.disabled = false;
+  startBtn.addEventListener('click', () => {
+    if (!sessionLocked) {
+      beginAuthSession();
     }
   });
 
